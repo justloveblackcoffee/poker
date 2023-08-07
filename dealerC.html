@@ -135,6 +135,8 @@
         </div>
     </div>
 
+    <button onclick="switchToEnglish()">Switch to English</button>
+
     <script>
         function updateBigBlind() {
             const bigBlindInput = document.getElementById("bigBlindInput");
@@ -661,6 +663,10 @@
             if (!isActivePlayer(players[currentBettingPlayerIndex]) || isAllInPlayer(players[currentBettingPlayerIndex])) {
                 setBettingPlayerIndex();
             }
+        }
+
+        function switchToEnglish() {
+            window.location.href = "dealer.html";
         }
     </script>
 </body>

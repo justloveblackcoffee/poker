@@ -136,6 +136,8 @@
         </div>
     </div>
 
+    <button onclick="switchToChinese()">切换到中文</button>
+
     <script>
         function updateBigBlind() {
             const bigBlindInput = document.getElementById("bigBlindInput");
@@ -662,6 +664,10 @@
             if (!isActivePlayer(players[currentBettingPlayerIndex]) || isAllInPlayer(players[currentBettingPlayerIndex])) {
                 setBettingPlayerIndex();
             }
+        }
+
+        function switchToChinese() {
+            window.location.href = "dealerC.html";
         }
     </script>
 </body>
