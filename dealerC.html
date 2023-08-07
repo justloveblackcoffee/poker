@@ -419,9 +419,30 @@
         function hasBetInCurrentRound() {
             // Check if any player has placed a bet in the current betting round
             for (const player of players) {
-                const currentHand = player.currentHand;
-                if (currentHand && currentHand.totalBets > 0) {
-                    return true;
+                const currentBettingRound = bettingRounds[currentBettingRoundIndex];
+                switch (currentBettingRound) {
+                    case "翻牌前":
+                        if (player.currentHand && player.currentHand.preFlop > 0) {
+                            return true;
+                        }
+                        break;
+                    case "翻牌圈":
+                        if (player.currentHand && player.currentHand.flop > 0) {
+                            return true;
+                        }
+                        break;
+                    case "转牌圈":
+                        if (player.currentHand && player.currentHand.turn > 0) {
+                            return true;
+                        }
+                        break;
+                    case "河牌圈":
+                        if (player.currentHand && player.currentHand.river > 0) {
+                            return true;
+                        }
+                        break;
+                    default:
+                        break;
                 }
             }
 
