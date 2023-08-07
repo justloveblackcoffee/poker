@@ -86,8 +86,6 @@
 </head>
 
 <body>
-    <h1>Texas No-limit Hold'em</h1>
-
     <div id="gameSetup" style="display: block;">
         <h3>Game Setup</h3>
         <hr>
@@ -219,10 +217,6 @@
                         <table>
                             <tr>
                                 <th>Player Name</th>
-                                <th>Out</th>
-                                <th>Original Chips</th>
-                                <th>Current Chips</th>
-                                <th>Cumulative Winning</th>
                                 <th>Folded</th>
                                 <th>Pre-flop</th>
                                 <th>Flop</th>
@@ -230,6 +224,10 @@
                                 <th>River</th>
                                 <th>Total Bets</th>
                                 <th>Win</th>
+                                <th>Original Chips</th>
+                                <th>Current Chips</th>
+                                <th>Cumulative Winning</th>
+                                <th>Out</th>
                             </tr>
                             ${generateBetsBoardRows()}
                         </table>
@@ -254,10 +252,6 @@
                 rows += `
                 <tr>
                     <td>${isFolded ? name : `<span class='current-player'>${name}</span>`}</td>
-                    <td>${isOut ? "Yes" : ""}</td>
-                    <td>${isFolded ? originalChips : `<span class='current-player'>${originalChips}</span>`}</td>
-                    <td>${isFolded ? currentChips : `<span class='current-player'>${currentChips}</span>`}</td>
-                    <td>${isFolded ? cumulativeWinning : `<span class='current-player'>${cumulativeWinning}</span>`}</td>
                     <td>${isFolded ? "Yes" : ""}</td>
                     <td>${isFolded ? preFlop : `<span class='current-player'>${preFlop}</span>`}</td>
                     <td>${isFolded ? flop : `<span class='current-player'>${flop}</span>`}</td>
@@ -265,6 +259,10 @@
                     <td>${isFolded ? river : `<span class='current-player'>${river}</span>`}</td>
                     <td>${isFolded ? totalBets : `<span class='current-player'>${totalBets}</span>`}</td>
                     <td>${isFolded ? win : `<span class='current-player'>${win}</span>`}</td>
+                    <td>${isFolded ? originalChips : `<span class='current-player'>${originalChips}</span>`}</td>
+                    <td>${isFolded ? currentChips : `<span class='current-player'>${currentChips}</span>`}</td>
+                    <td>${isFolded ? cumulativeWinning : `<span class='current-player'>${cumulativeWinning}</span>`}</td>
+                    <td>${isOut ? "Yes" : ""}</td>
                 </tr>
             `;
             });
@@ -445,15 +443,14 @@
         }
 
         function afterPlayerAction() {
-            moveToNextPlayer();
+            if (getTotalCurrentChips() !== 0) {
+                moveToNextPlayer();
+            }
             updateCurrentHandBoard();
             updateCurrentPlayerActions();
         }
 
         function moveToNextPlayer() {
-            if (getTotalCurrentChips() === 0) {
-                return;
-            }
             if (currentBettingPlayerIndex + 1 === players.length) {
                 currentBettingPlayerIndex = -1;
             }
@@ -467,7 +464,9 @@
         function getTotalCurrentChips() {
             let sum = 0;
             for (const player of players) {
-                sum += player.currentChips;
+                if (!player.isOut && !player.currentHand.isFolded) {
+                    sum += player.currentChips;
+                }
             }
             return sum;
         }
@@ -477,7 +476,9 @@
 
             ++currentBettingRoundIndex;
             currentBettingPlayerIndex = currentSmallBlindPlayerIndex - 1;
-            setBettingPlayerIndex();
+            if (getTotalCurrentChips() !== 0) {
+                setBettingPlayerIndex();
+            }
 
             updateCurrentHandBoard();
             updateCurrentPlayerActions();
