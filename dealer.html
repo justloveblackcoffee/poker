@@ -475,8 +475,8 @@
             splitPot();
 
             ++currentBettingRoundIndex;
-            currentBettingPlayerIndex = currentSmallBlindPlayerIndex - 1;
             if (getTotalCurrentChips() !== 0) {
+                currentBettingPlayerIndex = currentSmallBlindPlayerIndex - 1;
                 setBettingPlayerIndex();
             }
 
