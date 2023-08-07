@@ -251,17 +251,17 @@
                 const { preFlop, flop, turn, river, totalBets, win, isFolded } = currentHand;
                 rows += `
                 <tr>
-                    <td>${isFolded ? name : `<span class='current-player'>${name}</span>`}</td>
-                    <td>${isFolded ? "Yes" : ""}</td>
-                    <td>${isFolded ? preFlop : `<span class='current-player'>${preFlop}</span>`}</td>
-                    <td>${isFolded ? flop : `<span class='current-player'>${flop}</span>`}</td>
-                    <td>${isFolded ? turn : `<span class='current-player'>${turn}</span>`}</td>
-                    <td>${isFolded ? river : `<span class='current-player'>${river}</span>`}</td>
-                    <td>${isFolded ? totalBets : `<span class='current-player'>${totalBets}</span>`}</td>
-                    <td>${isFolded ? win : `<span class='current-player'>${win}</span>`}</td>
-                    <td>${isFolded ? originalChips : `<span class='current-player'>${originalChips}</span>`}</td>
-                    <td>${isFolded ? currentChips : `<span class='current-player'>${currentChips}</span>`}</td>
-                    <td>${isFolded ? cumulativeWinning : `<span class='current-player'>${cumulativeWinning}</span>`}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${name}</span>` : name}</td>
+                    <td>${!isOut && isFolded ? "Yes" : ""}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${preFlop}</span>` : preFlop}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${flop}</span>` : flop}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${turn}</span>` : turn}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${river}</span>` : river}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${totalBets}</span>` : totalBets}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${win}</span>` : win}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${originalChips}</span>` : originalChips}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${currentChips}</span>` : currentChips}</td>
+                    <td>${isActivePlayer(player) ? `<span class='current-player'>${cumulativeWinning}</span>` : cumulativeWinning}</td>
                     <td>${isOut ? "Yes" : ""}</td>
                 </tr>
             `;
@@ -322,6 +322,7 @@
             const currentPlayer = players[currentBettingPlayerIndex];
             const currentPlayerActionsDiv = document.getElementById("currentPlayerActions");
             const currentPlayerNameSpan = currentPlayerActionsDiv.querySelector("#currentPlayerName");
+            const btnFold = currentPlayerActionsDiv.querySelector("#btnFold");
             const allinChipsInput = currentPlayerActionsDiv.querySelector("#allinChips");
             const btnAllin = currentPlayerActionsDiv.querySelector("#btnAllin");
             const betChipsInput = currentPlayerActionsDiv.querySelector("#betChips");
@@ -346,7 +347,13 @@
             checkChipsInput.value = "0";
             callChipsInput.value = "";
 
-            if (currentPlayer.currentChips > 0) {
+            if (isActivePlayer(currentPlayer)) {
+                btnFold.disabled = false;
+            } else {
+                btnFold.disabled = true;
+            }
+
+            if (isActivePlayer(currentPlayer) && currentPlayer.currentChips > 0) {
                 btnAllin.disabled = false;
             } else {
                 btnAllin.disabled = true;
@@ -456,7 +463,7 @@
             }
             ++currentBettingPlayerIndex;
             const currentPlayer = players[currentBettingPlayerIndex];
-            if (currentPlayer.currentChips === 0 || currentPlayer.currentHand.isFolded) {
+            if (!isActivePlayer(currentPlayer) || isAllInPlayer(currentPlayer)) {
                 moveToNextPlayer();
             }
         }
@@ -464,7 +471,7 @@
         function getTotalCurrentChips() {
             let sum = 0;
             for (const player of players) {
-                if (!player.isOut && !player.currentHand.isFolded) {
+                if (isActivePlayer(player)) {
                     sum += player.currentChips;
                 }
             }
@@ -534,7 +541,7 @@
         }
 
         function getAllInPlayersDistinctTotalBetsAsc() {
-            const allInPlayers = players.filter(player => !player.currentHand.isFolded && player.currentChips === 0);
+            const allInPlayers = players.filter(player => isAllInPlayer(player));
             const totalBetsArray = allInPlayers.map(player => player.currentHand.totalBets);
 
             // Create a Set to store unique totalBets values
@@ -550,11 +557,11 @@
         }
 
         function isAllInPlayer(player) {
-            return player.isOut === false && player.currentHand !== null && !player.currentHand.isFolded && player.currentChips === 0;
+            return isActivePlayer(player) && player.currentChips === 0;
         }
 
         function isActivePlayer(player) {
-            return player.isOut === false && player.currentHand !== null && !player.currentHand.isFolded;
+            return player.isOut === false && player.currentHand !== null && player.currentHand.isFolded === false;
         }
 
         function endHand() {
@@ -607,9 +614,7 @@
                 currentBettingPlayerIndex = -1;
             }
             ++currentBettingPlayerIndex;
-            if (players[currentBettingPlayerIndex].currentChips === 0
-                || players[currentBettingPlayerIndex].currentHand === null
-                || players[currentBettingPlayerIndex].currentHand.isFolded) {
+            if (!isActivePlayer(players[currentBettingPlayerIndex]) || isAllInPlayer(players[currentBettingPlayerIndex])) {
                 setBettingPlayerIndex();
             }
         }
