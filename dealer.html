@@ -82,6 +82,8 @@
         let currentSmallBlindPlayerIndex = -1;
         let currentBigBlindPlayerIndex = 1;
         let currentBettingPlayerIndex = 2;
+
+        let winResults = [];
     </script>
 </head>
 
@@ -129,6 +131,7 @@
         </div>
         <br>
         <div id="dealerActions">
+            <button id="calculate" onclick="calChips()">Choose Winner and Cal Chips</button><br>
             <button id="btnStartNextBetting" onclick="startNextRoundOfBetting()">Start Next Round of
                 Betting</button><br>
             <button id="btnEndHand" onclick="endHand()">Distribute Chips and End Hand</button><br>
@@ -213,7 +216,7 @@
             playerBoardDiv.style.display = "none";
             const dealerActionsDiv = document.getElementById("dealerActions");
             dealerActionsDiv.style.display = "block";
-            startHand();
+            startNextHand();
         }
 
         function updateCurrentHandBoard() {
@@ -284,14 +287,68 @@
 
                 const potName = potNumber === 1 ? "Main Pot:" : `Side Pot ${potNumber}:`;
                 const chips = pot.chips;
-                const whoCanWin = pot.whoCanWin;
-                const contestedBy = pot.contestedBy;
+                const contestors = pot.contestors;
+                const contestorIndexes = pot.contestorIndexes;
 
                 potsContent += `
-                    <p>${potName} <b>$${chips}</b> Who Can Win: <span class='current-player'>${whoCanWin.join(', ')}</span></p>
-                `;
+            <div>
+                <p>${potName} <b>$${chips}</b></p>
+                <div>
+                    Contestors:
+                    ${contestors.map((contestor, index) => `
+                        <label>
+                            <input type="checkbox" name="pot_${i}_contestor_${contestorIndexes[index]}">
+                            ${contestor}
+                        </label>
+                    `).join('')}
+                </div>
+            </div>
+        `;
             }
+            potsContent += '<div id="results"></div>';
+
             return potsContent;
+        }
+
+        function calChips() {
+            if (pots.length === 0) {
+                splitPot();
+                updateCurrentHandBoard();
+                updateCurrentPlayerActions();
+                updateDealerActions();
+            }
+            const resultsElement = document.getElementById("results");
+            resultsElement.innerHTML = "";
+
+            const playerChips = Array.from(players, () => 0);
+
+            for (let i = 0; i < pots.length; i++) {
+                const pot = pots[i];
+                const contestorIndexes = pot.contestorIndexes;
+                let selectedPlayerIndex = [];
+
+                contestorIndexes.forEach(contestorIndex => {
+                    const checkbox = document.querySelector(`input[name="pot_${i}_contestor_${contestorIndex}"]`);
+                    if (checkbox.checked) {
+                        selectedPlayerIndex.push(contestorIndex);
+                    }
+                });
+
+                selectedPlayerIndex.forEach(contestorIndex => {
+                    playerChips[contestorIndex] += pot.chips / selectedPlayerIndex.length;
+                });
+            }
+
+            winResults = playerChips.map((chips, index) => ({ index, chips }))
+                .filter(result => result.chips > 0)
+                .sort((a, b) => a.index - b.index);
+
+            resultsElement.innerHTML = `
+            <h4>Winning Results:</h4>
+            <ul>
+                ${winResults.map(result => `<li>${players[result.index].name}: $${result.chips}</li>`).join('')}
+            </ul>
+        `;
         }
 
         function updateBetForCurrentHand(playerIndex, bet) {
@@ -320,9 +377,7 @@
             // Update total bets for the currentHand
             currentPlayer.currentHand.totalBets += betInteger;
 
-            // Update currentChips and cumulativeWinning
-            currentPlayer.currentChips = currentPlayer.originalChips - currentPlayer.currentHand.totalBets + currentPlayer.currentHand.win;
-            currentPlayer.cumulativeWinning = currentPlayer.currentChips - currentPlayer.originalChips;
+            calculatePlayerStats(currentPlayer);
         }
 
         function updateCurrentPlayerActions() {
@@ -494,6 +549,7 @@
             if (getTotalCurrentChips() !== 0) {
                 moveToNextPlayer();
             }
+            splitPot();
             updateCurrentHandBoard();
             updateCurrentPlayerActions();
             updateDealerActions();
@@ -544,8 +600,8 @@
                 const activePlayers = players.filter(player => isActivePlayer(player));
                 pots = [{
                     "chips": totalPot,
-                    "whoCanWin": activePlayers.map(player => player.name),
-                    "contestedBy": activePlayers.map(player => player.seatNumber - 1)
+                    "contestors": activePlayers.map(player => player.name),
+                    "contestorIndexes": activePlayers.map(player => player.seatNumber - 1)
                 }]
                 return pots; // No need to split pot if no player has gone all-in
             }
@@ -558,8 +614,8 @@
                 let allInChips = allInPlayersDistinctTotalBets[i] - lastAllinTotalBets;
                 let pot = {
                     "chips": 0,
-                    "whoCanWin": [],
-                    "contestedBy": []
+                    "contestors": [],
+                    "contestorIndexes": []
                 };
 
                 for (let j = 0; j < clonedPlayers.length; j++) {
@@ -571,8 +627,8 @@
                         pot.chips += allInChips;
                         clonedPlayers[j].currentHand.totalBets = clonedPlayers[j].currentHand.totalBets - (allInPlayersDistinctTotalBets[i] - lastAllinTotalBets);
                         if (isActivePlayer(clonedPlayers[j])) {
-                            pot.whoCanWin.push(clonedPlayers[j].name);
-                            pot.contestedBy.push(j);
+                            pot.contestors.push(clonedPlayers[j].name);
+                            pot.contestorIndexes.push(j);
                         }
                     } else {
                         pot.chips += clonedPlayers[j].currentHand.totalBets;
@@ -611,13 +667,24 @@
         }
 
         function endHand() {
+            winResults.forEach((winner) => {
+                const { index, chips } = winner;
+                players[index].currentHand.win = chips;
+                calculatePlayerStats(players[index]);
+            });
+            updateCurrentHandBoard();
+            updateCurrentPlayerActions();
+            updateDealerActions();
         }
 
-        function startHand() {
+        function startNextHand() {
             initialHandForEligiblePlayers();
             ++handId;
             bigBlind = bigBlind * handId;
             smallBlind = bigBlind / 2;
+            totalPot = 0;
+            pots = [];
+            winResults = [];
             setSbPlayerIndex();
             setBbPlayerIndex();
             setBettingPlayerIndex();
@@ -639,6 +706,20 @@
                     player.isOut = true;
                 }
             }
+        }
+
+        function calculatePlayerStats(player) {
+            const currentHand = player.currentHand;
+            const historicalHands = player.historicalHands;
+
+            const totalBets = currentHand.totalBets || 0;
+            const win = currentHand.win || 0;
+
+            const cumulativeBets = historicalHands.reduce((total, hand) => total + (hand.totalBets || 0), 0);
+            const cumulativeWins = historicalHands.reduce((total, hand) => total + (hand.win || 0), 0);
+
+            player.currentChips = player.originalChips - totalBets + win;
+            player.cumulativeWinning = player.currentChips - player.originalChips + cumulativeWins - cumulativeBets;
         }
 
         function setSbPlayerIndex() {
