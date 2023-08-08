@@ -433,7 +433,7 @@
                 btnRaise.disabled = true;
             }
 
-            if (currentPlayer.currentHand.totalBets === currentMaxTotalBets) {
+            if (currentPlayer.currentHand.totalBets === currentMaxTotalBets && currentPlayer.currentChips > 0) {
                 btnCheck.disabled = false;
             } else {
                 btnCheck.disabled = true;
@@ -678,7 +678,15 @@
 
         function startNextHand() {
             initialHandForEligiblePlayers();
+
+            const activePlayers = players.filter(player => !player.isOut);
+            if (activePlayers.length < 2) {
+                alert("游戏结束！");
+                return;
+            }
+
             ++handId;
+            currentBettingRoundIndex = 0;
             bigBlind = bigBlind * handId;
             smallBlind = bigBlind / 2;
             totalPot = 0;
@@ -687,8 +695,8 @@
             setSbPlayerIndex();
             setBbPlayerIndex();
             setBettingPlayerIndex();
-            updateBetForCurrentHand(currentSmallBlindPlayerIndex, smallBlind);
-            updateBetForCurrentHand(currentBigBlindPlayerIndex, bigBlind);
+            updateBetForCurrentHand(currentSmallBlindPlayerIndex, Math.min(smallBlind, players[currentSmallBlindPlayerIndex].currentChips));
+            updateBetForCurrentHand(currentBigBlindPlayerIndex, Math.min(bigBlind, players[currentBigBlindPlayerIndex].currentChips));
             updateCurrentHandBoard();
             updateCurrentPlayerActions();
             updateDealerActions();
@@ -699,9 +707,8 @@
                 if (player.currentHand !== null) {
                     player.historicalHands.push(JSON.parse(JSON.stringify(player.currentHand)));
                 }
-                if (player.currentChips > 0) {
-                    player.currentHand = JSON.parse(JSON.stringify(defaultHand));
-                } else {
+                player.currentHand = JSON.parse(JSON.stringify(defaultHand));
+                if (player.currentChips === 0) {
                     player.isOut = true;
                 }
             }
@@ -722,17 +729,23 @@
         }
 
         function setSbPlayerIndex() {
+            if (currentSmallBlindPlayerIndex + 1 === players.length) {
+                currentSmallBlindPlayerIndex = -1;
+            }
             ++currentSmallBlindPlayerIndex;
             currentBigBlindPlayerIndex = currentSmallBlindPlayerIndex;
             currentBettingPlayerIndex = currentBigBlindPlayerIndex;
-            if (players[currentSmallBlindPlayerIndex].currentChips === 0) {
+            if (players[currentSmallBlindPlayerIndex].isOut) {
                 setSbPlayerIndex();
             }
         }
         function setBbPlayerIndex() {
+            if (currentBigBlindPlayerIndex + 1 === players.length) {
+                currentBigBlindPlayerIndex = -1;
+            }
             ++currentBigBlindPlayerIndex;
             currentBettingPlayerIndex = currentBigBlindPlayerIndex;
-            if (players[currentBigBlindPlayerIndex].currentChips === 0) {
+            if (players[currentBigBlindPlayerIndex].isOut) {
                 setBbPlayerIndex();
             }
         }
