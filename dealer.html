@@ -2,7 +2,8 @@
 <html>
 
 <head>
-    <title>Texas No-limit Hold'em</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>德州无限制</title>
     <style>
         table {
             border-collapse: collapse;
@@ -40,6 +41,34 @@
             color: blue;
             font-weight: bold;
         }
+
+        @media (max-width: 600px) {
+            body {
+                font-size: 12px;
+            }
+
+            #gameSetup,
+            #playerBoard,
+            #currentHandBoard,
+            #dealerActions {
+                padding: 5px;
+                margin-bottom: 5px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            .total-pot {
+                font-size: 14px;
+            }
+
+            /* Adjust button styles for better visibility on mobile */
+            .button-container button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
     </style>
 
     <script>
@@ -47,7 +76,7 @@
         let players = [];
         const defaultPlayer = {
             "seatNumber": 1,
-            "name": "Player 1",
+            "name": "玩家 1",
             "originalChips": 3000,
             "currentChips": 3000,
             "cumulativeWinning": 0,
@@ -72,10 +101,10 @@
         let totalPot = 0;
         let pots = [];
         let bettingRounds = [
-            "Pre-flop",
-            "Flop",
-            "Turn",
-            "River"
+            "翻牌前",
+            "翻牌圈",
+            "转牌圈",
+            "河牌圈"
         ];
         let currentBettingRoundIndex = 0;
 
@@ -89,22 +118,25 @@
 
 <body>
     <div id="gameSetup" style="display: block;">
-        <h3>Game Setup</h3>
+        <h3>游戏设置</h3>
         <hr>
         <div id="initialData">
-            Initial Small Blind: <b>$100</b>, Big Blind: <b>$200</b>
+            初始小盲注：<b>$100</b>，大盲注：<b>$200</b>
         </div>
-        <label for="bigBlindInput">New Big Blind:</label>
-        <input type="number" id="bigBlindInput" />
-        <button onclick="updateBigBlind()">Update</button>
+        <label for="bigBlindInput">新大盲注：</label>
+        <input type="number" id="bigBlindInput" style="width: 80px;" />
+        <br>
+        <button onclick="updateBigBlind()">更新</button>
         <hr>
-        <label for="playerName">Player Name:</label>
-        <input type="text" id="playerName" />
-        <label for="defaultChips">Default Chips:</label>
-        <input type="number" id="defaultChips" value="1000" />
-        <button onclick="registerPlayer()">Add Player</button><br>
+        <label for="playerName">玩家名称：</label>
+        <input type="text" id="playerName" style="width: 80px;" />
+        <br>
+        <label for="defaultChips">初始筹码：</label>
+        <input type="number" id="defaultChips" style="width: 80px;" value="1000" />
+        <br>
+        <button onclick="registerPlayer()">添加玩家</button><br>
         <hr>
-        <button onclick="startGame()">Start Game</button>
+        <button onclick="startGame()">开始游戏</button>
     </div>
 
     <div id="playerBoard" style="display: none;">
@@ -115,31 +147,32 @@
 
     <div id="dealerActions" style="display: none;">
         <div id="currentPlayerActions">
-            Current Player: <span id="currentPlayerName" class="current-player">xxxxx</span>
-            <button id="btnFold" onclick="onFold()">Fold</button>
-            <input type="number" id="checkChips" disabled value="0" size="7" />
-            <button id="btnCheck" onclick="onCheck()">Check</button>
+            当前玩家：<span id="currentPlayerName" class="current-player">xxxxx</span>
             <br>
-            <input type="number" id="betChips" size="7" />
-            <button id="btnBet" onclick="onBet()">Bet</button>
-            <input type="number" id="callChips" disabled size="7" />
-            <button id="btnCall" onclick="onCall()">Call</button>
-            <input type="number" id="raiseChips" size="7" />
-            <button id="btnRaise" onclick="onRaise()">Raise</button>
-            <input type="number" id="allinChips" disabled size="7" />
-            <button id="btnAllin" onclick="onAllin()">All-in</button>
+            <button id="btnFold" onclick="onFold()">弃牌</button>
+            <input type="number" id="checkChips" disabled value="0" style="width: 80px;" />
+            <button id="btnCheck" onclick="onCheck()">看牌</button>
+            <br>
+            <input type="number" id="betChips" style="width: 80px;" />
+            <button id="btnBet" onclick="onBet()">下注</button>
+            <input type="number" id="callChips" disabled style="width: 80px;" />
+            <button id="btnCall" onclick="onCall()">跟注</button>
+            <br>
+            <input type="number" id="raiseChips" style="width: 80px;" />
+            <button id="btnRaise" onclick="onRaise()">加注</button>
+            <input type="number" id="allinChips" disabled style="width: 80px;" />
+            <button id="btnAllin" onclick="onAllin()">全下</button>
         </div>
         <br>
         <div id="dealerActions">
-            <button id="calculate" onclick="calChips()">Choose Winner and Cal Chips</button><br>
-            <button id="btnStartNextBetting" onclick="startNextRoundOfBetting()">Start Next Round of
-                Betting</button><br>
-            <button id="btnEndHand" onclick="endHand()">Distribute Chips and End Hand</button><br>
-            <button id="btnStartNextHand" onclick="startNextHand()">Start Next Hand</button><br>
+            <button id="calculate" onclick="calChips()">已选择赢家，开始预结算</button><br>
+            <button id="btnStartNextBetting" onclick="startNextRoundOfBetting()">开始下一轮投注</button><br>
+            <button id="btnEndHand" onclick="endHand()">分配筹码并结束本局</button><br>
+            <button id="btnStartNextHand" onclick="startNextHand()">开始下一手</button><br>
         </div>
     </div>
 
-    <button onclick="switchToChinese()">切换到中文</button>
+    <button onclick="switchToEnglish()" style="position: fixed; bottom: 0; right: 0;">Switch to English</button>
 
     <script>
         function updateBigBlind() {
@@ -187,8 +220,8 @@
             let playerTableHTML = `
                 <table>
                     <tr>
-                        <th>Player Name</th>
-                        <th>Original Chips</th>
+                        <th>玩家名称</th>
+                        <th>初始筹码</th>
                     </tr>
             `;
 
@@ -207,7 +240,7 @@
 
         function startGame() {
             if (players.length <= 1) {
-                alert("Cannot start the game with less than two players!");
+                alert("至少需要需要两名玩家才能开始游戏!");
                 return;
             }
             const gameSetupDiv = document.getElementById("gameSetup");
@@ -226,31 +259,31 @@
                     <div id="betsBoard">
                         <table>
                             <tr>
-                                <th>Player Name</th>
-                                <th>Folded</th>
-                                <th>Pre-flop</th>
-                                <th>Flop</th>
-                                <th>Turn</th>
-                                <th>River</th>
-                                <th>Total Bets</th>
-                                <th>Win</th>
-                                <th>Original Chips</th>
-                                <th>Current Chips</th>
-                                <th>Cumulative Winning</th>
-                                <th>Out</th>
+                                <th>玩家名称</th>
+                                <th>已弃牌</th>
+                                <th>翻牌前</th>
+                                <th>翻牌圈</th>
+                                <th>转牌圈</th>
+                                <th>河牌圈</th>
+                                <th>总下注额</th>
+                                <th>获胜金额</th>
+                                <th>初始筹码</th>
+                                <th>当前筹码</th>
+                                <th>累计盈利</th>
+                                <th>已淘汰</th>
                             </tr>
                             ${generateBetsBoardRows()}
                         </table>
                     </div>
                     <div id="handInfo">
-                        <h3>Hand ${handId}</h3>
-                        <p>Small Blind: <b>$${smallBlind}</b>; Big Blind: <b>$${bigBlind}</b></p>
+                        <h3>局数 ${handId}</h3>
+                        <p>小盲注: <b>$${smallBlind}</b>; 大盲注: <b>$${bigBlind}</b></p>
                     </div>
-                    <div id="totalPot"><p class="total-pot">Total Pot: <b>$${totalPot}</b></p></div>
+                    <div id="totalPot"><p class="total-pot">总奖池: <b>$${totalPot}</b></p></div>
                     <div id="potsInfo">
                         ${generatePotsContent()}
                     </div>
-                    <p class="current-round">Current Betting Round: ${bettingRounds[currentBettingRoundIndex]}</p>
+                    <p class="current-round">当前下注回合: ${bettingRounds[currentBettingRoundIndex]}</p>
                 `;
         }
 
@@ -262,7 +295,7 @@
                 rows += `
                 <tr>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${name}</span>` : name}</td>
-                    <td>${!isOut && isFolded ? "Yes" : ""}</td>
+                    <td>${!isOut && isFolded ? "是" : ""}</td>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${preFlop}</span>` : preFlop}</td>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${flop}</span>` : flop}</td>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${turn}</span>` : turn}</td>
@@ -272,7 +305,7 @@
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${originalChips}</span>` : originalChips}</td>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${currentChips}</span>` : currentChips}</td>
                     <td>${isActivePlayer(player) ? `<span class='current-player'>${cumulativeWinning}</span>` : cumulativeWinning}</td>
-                    <td>${isOut ? "Yes" : ""}</td>
+                    <td>${isOut ? "是" : ""}</td>
                 </tr>
             `;
             });
@@ -285,7 +318,7 @@
                 const potNumber = i + 1;
                 const pot = pots[i];
 
-                const potName = potNumber === 1 ? "Main Pot:" : `Side Pot ${potNumber}:`;
+                const potName = potNumber === 1 ? "主奖池:" : `边池 ${potNumber}:`;
                 const chips = pot.chips;
                 const contestors = pot.contestors;
                 const contestorIndexes = pot.contestorIndexes;
@@ -294,7 +327,7 @@
             <div>
                 <p>${potName} <b>$${chips}</b></p>
                 <div>
-                    Contestors:
+                    竞争者:
                     ${contestors.map((contestor, index) => `
                         <label>
                             <input type="checkbox" name="pot_${i}_contestor_${contestorIndexes[index]}">
@@ -303,7 +336,7 @@
                     `).join('')}
                 </div>
             </div>
-        `;
+                `;
             }
             potsContent += '<div id="results"></div>';
 
@@ -344,7 +377,7 @@
                 .sort((a, b) => a.index - b.index);
 
             resultsElement.innerHTML = `
-            <h4>Winning Results:</h4>
+            <h4>预计获胜结果:</h4>
             <ul>
                 ${winResults.map(result => `<li>${players[result.index].name}: $${result.chips}</li>`).join('')}
             </ul>
@@ -358,16 +391,16 @@
             totalPot += betInteger;
             // Update the currentHand info based on the current betting round
             switch (currentBettingRound) {
-                case "Pre-flop":
+                case "翻牌前":
                     currentPlayer.currentHand.preFlop += betInteger;
                     break;
-                case "Flop":
+                case "翻牌圈":
                     currentPlayer.currentHand.flop += betInteger;
                     break;
-                case "Turn":
+                case "转牌圈":
                     currentPlayer.currentHand.turn += betInteger;
                     break;
-                case "River":
+                case "河牌圈":
                     currentPlayer.currentHand.river += betInteger;
                     break;
                 default:
@@ -479,22 +512,22 @@
             for (const player of players) {
                 const currentBettingRound = bettingRounds[currentBettingRoundIndex];
                 switch (currentBettingRound) {
-                    case "Pre-flop":
+                    case "翻牌前":
                         if (player.currentHand && player.currentHand.preFlop > 0) {
                             return true;
                         }
                         break;
-                    case "Flop":
+                    case "翻牌圈":
                         if (player.currentHand && player.currentHand.flop > 0) {
                             return true;
                         }
                         break;
-                    case "Turn":
+                    case "转牌圈":
                         if (player.currentHand && player.currentHand.turn > 0) {
                             return true;
                         }
                         break;
-                    case "River":
+                    case "河牌圈":
                         if (player.currentHand && player.currentHand.river > 0) {
                             return true;
                         }
@@ -549,7 +582,7 @@
             if (getTotalCurrentChips() !== 0) {
                 moveToNextPlayer();
             }
-            calculatePlayerStats();splitPot();
+            splitPot();
             updateCurrentHandBoard();
             updateCurrentPlayerActions();
             updateDealerActions();
@@ -679,10 +712,10 @@
 
         function startNextHand() {
             initialHandForEligiblePlayers();
-    
+
             const activePlayers = players.filter(player => !player.isOut);
             if (activePlayers.length < 2) {
-                alert("Game Over!");
+                alert("游戏结束！");
                 return;
             }
 
@@ -760,8 +793,8 @@
             }
         }
 
-        function switchToChinese() {
-            window.location.href = "dealerC.html";
+        function switchToEnglish() {
+            window.location.href = "dealer-e.html";
         }
     </script>
 </body>
